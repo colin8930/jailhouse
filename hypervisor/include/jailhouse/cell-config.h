@@ -144,6 +144,7 @@ struct jailhouse_iommu {
 	__u64 size;
 	__u16 amd_bdf;
 	__u16 amd_cap;
+	__u32 amd_features;
 } __attribute__((packed));
 
 #define JAILHOUSE_SYSTEM_SIGNATURE	"JAILSYST"
