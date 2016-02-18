@@ -67,9 +67,11 @@ struct {
 			.mmconfig_end_bus = ${hex(mmconfig.end_bus)},
 			.pm_timer_address = ${hex(pm_timer_base)},
 			% if iommu_units:
-			.iommu_base = {
+			.iommu_units = {
 				% for d in iommu_units:
-				${hex(d)},
+				{
+					.base = ${hex(d)},
+				},
 				% endfor
 			},
 			% endif
