@@ -475,7 +475,8 @@ int iommu_init(void)
 	if (units == 0)
 		return trace_error(-EINVAL);
 
-	dmar_reg_base = page_alloc(&remap_pool, units);
+	/* a unit can occupy up to 3 pages for registers */
+	dmar_reg_base = page_alloc(&remap_pool, units * 3);
 	if (!dmar_reg_base)
 		return trace_error(-ENOMEM);
 
@@ -486,9 +487,9 @@ int iommu_init(void)
 	for (n = 0; n < units; n++) {
 		unit = &system_config->platform_info.x86.iommu_units[n];
 
-		reg_base = dmar_reg_base + n * PAGE_SIZE;
+		reg_base = dmar_reg_base + n * PAGE_SIZE * 3;
 
-		err = paging_create(&hv_paging_structs, unit->base, PAGE_SIZE,
+		err = paging_create(&hv_paging_structs, unit->base, unit->size,
 				    (unsigned long)reg_base,
 				    PAGE_DEFAULT_FLAGS | PAGE_FLAG_DEVICE,
 				    PAGING_NON_COHERENT);
@@ -503,7 +504,7 @@ int iommu_init(void)
 			return 0;
 		}
 
-		printk("Found DMAR @%p\n", unit->base);
+		printk("DMAR unit @0x%lx/0x%x\n", unit->base, unit->size);
 
 		caps = mmio_read64(reg_base + VTD_CAP_REG);
 		if (caps & VTD_CAP_SAGAW39)
