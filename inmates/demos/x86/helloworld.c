@@ -30,9 +30,6 @@ void inmate_main(void)
     while (!terminate) {
         asm volatile("hlt");
 
-        if (cache_pollution)
-            pollute_cache();
-
         switch (comm_region->msg_to_cell) {
         case JAILHOUSE_MSG_SHUTDOWN_REQUEST:
             if (!allow_terminate) {
