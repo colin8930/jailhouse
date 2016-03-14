@@ -20,6 +20,37 @@
 
 void inmate_main(void)
 {
-	printk_uart_base = UART_BASE;
-	printk("Hello world\n");
+
+    bool allow_terminate = false;
+    bool terminate = false;
+
+    printk_uart_base = UART_BASE;
+    printk("Hello world\n");
+
+    while (!terminate) {
+        asm volatile("hlt");
+
+        if (cache_pollution)
+            pollute_cache();
+
+        switch (comm_region->msg_to_cell) {
+        case JAILHOUSE_MSG_SHUTDOWN_REQUEST:
+            if (!allow_terminate) {
+                printk("Rejecting first shutdown request - "
+                       "try again!\n");
+                jailhouse_send_reply_from_cell(comm_region,
+                                               JAILHOUSE_MSG_REQUEST_DENIED);
+                allow_terminate = true;
+            } else
+                terminate = true;
+            break;
+        default:
+            jailhouse_send_reply_from_cell(comm_region,
+                                           JAILHOUSE_MSG_UNKNOWN);
+            break;
+        }
+    }
+
+    printk("Stopped APIC demo\n");
+    comm_region->cell_state = JAILHOUSE_CELL_SHUT_DOWN;
 }
