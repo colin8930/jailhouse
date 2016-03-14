@@ -17,6 +17,10 @@
 #else
 #define UART_BASE		0x3f8
 #endif
+#define UART_IDLE_LOOPS     100
+#define UART_LSR        0x5
+#define UART_LSR_THRE       0x20
+#define UART_IDLE_LOOPS     100
 
 void inmate_main(void)
 {
@@ -25,8 +29,15 @@ void inmate_main(void)
     bool terminate = false;
 
     printk_uart_base = UART_BASE;
-    printk("Hello world\n");
 
+    do {
+        for (n = 0; n < UART_IDLE_LOOPS; n++)
+            if (!(inb(UART_BASE + UART_LSR) & UART_LSR_THRE))
+                break;
+    } while (n < UART_IDLE_LOOPS);
+
+    printk("Hello world\n");
+    comm_region->cell_state = JAILHOUSE_CELL_RUNNING_LOCKED;
     while (!terminate) {
         asm volatile("hlt");
 
